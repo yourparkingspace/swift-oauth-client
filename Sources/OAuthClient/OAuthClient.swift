@@ -104,6 +104,10 @@ public class OAuthClient {
         }
     }
 
+    public func logout() {
+        let _ = keychainHelper.remove(withKey: OAuthGrantType.password("", "").storageKey)
+    }
+
     private func buildParamsForRequest(grant: OAuthGrantType) -> [String: String] {
         var params = grant.params
         params["client_id"] = serverConnection.clientID

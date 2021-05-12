@@ -368,4 +368,49 @@ class OAuthClientTests: XCTestCase {
 
         waitForExpectations(timeout: 5, handler: nil)
     }
+
+    func testLogoutWorksCorrectly() throws {
+        let expect = expectation(description: "Token is deleted")
+
+        let jsonData = TestStrings.oAuthTokenResponse.data(using: .utf8)
+
+        let tokenToStore = try JSONDecoder().decode(OAuthAccessToken.self, from: jsonData!)
+
+        try keychain.add(tokenToStore, withKey: "password")
+
+        // Verify the token is infact stored
+        client.fetchStoredToken(type: .password("", "")) { [weak self] result in
+            guard let self = self else {
+                XCTFail()
+                return
+            }
+
+            switch result {
+            case .success(let returnedToken):
+                XCTAssertEqual(returnedToken.accessToken, tokenToStore.accessToken)
+                // Perform the logout
+                self.client.logout()
+
+                // Verify we can no longer fetch a stored password token
+                self.client.fetchStoredToken(type: .password("", "")) { secondResult in
+                    switch secondResult {
+                    case .success(_):
+                        XCTFail("Token was still retreived")
+                    case .failure(let returnedError):
+                        let decodedError = returnedError as! OAuthClientError
+                        switch decodedError {
+                        case .errorReadingTokenFromStorage(_):
+                            expect.fulfill()
+                        default:
+                            XCTFail("Wrong error type")
+                        }
+                    }
+                }
+            case .failure(_):
+                XCTFail("Token not stored")
+            }
+        }
+
+        waitForExpectations(timeout: 5, handler: nil)
+    }
 }
