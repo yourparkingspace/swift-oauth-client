@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class OAuthClient {
+public class OAuthClient: Client {
     private let keychainHelper: KeychainInteractor
 
     private let session: URLSession
