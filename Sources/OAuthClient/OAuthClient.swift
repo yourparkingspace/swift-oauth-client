@@ -28,7 +28,8 @@ public class OAuthClient: Client {
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
         request.setHTTPAuthorization(.basicAuthentication(username: serverConnection.clientID, password: serverConnection.clientSecret))
-        request.httpBody = try? JSONEncoder().encode(buildParamsForRequest(grant: grantType))
+        request.setHTTPBody(parameters: buildParamsForRequest(grant: grantType))
+
 
         session.dataTask(with: request) { [weak self] (data, response, error) in
             guard let self = self else { return }

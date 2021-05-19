@@ -37,8 +37,6 @@ public func == (lhs: HTTPAuthentication, rhs: HTTPAuthentication) -> Bool {
     case let (.basicAuthentication(lusername, lpassword), .basicAuthentication(rusername, rpassword)):
         return lusername == rusername
             && lpassword == rpassword
-    default:
-        return false
     }
 }
 
@@ -69,37 +67,22 @@ public extension URLRequest {
 
     /// Sets the HTTP body using the given paramters encoded as query string.
     ///
-    /// - parameter parameters: The parameters to be encoded or `nil`.
+    /// - parameter parameters: The parameters to be encoded.
     ///
-    /// TODO: Tests crash without named parameter.
-    mutating func setHTTPBody(parameters: [String: AnyObject]?) {
-        if let parameters = parameters {
-            var components: [(String, String)] = []
-            for (key, value) in parameters {
-                components += queryComponents(key, value)
-            }
-            let bodyString = components.map { "\($0)=\($1)" }.joined(separator: "&")
-            httpBody = bodyString.data(using: String.Encoding.utf8)
-        } else {
-            httpBody = nil
+    mutating func setHTTPBody(parameters: [String: String]) {
+        var components: [(String, String)] = []
+        for (key, value) in parameters {
+            components += queryComponents(key, value)
         }
+        let bodyString = components.map { "\($0)=\($1)" }.joined(separator: "&")
+        httpBody = bodyString.data(using: String.Encoding.utf8)
     }
 
     // Taken from https://github.com/Alamofire/Alamofire/blob/master/Source/ParameterEncoding.swift#L176
-    private func queryComponents(_ key: String, _ value: AnyObject) -> [(String, String)] {
+    private func queryComponents(_ key: String, _ value: String) -> [(String, String)] {
         var components: [(String, String)] = []
 
-        if let dictionary = value as? [String: AnyObject] {
-            for (nestedKey, value) in dictionary {
-                components += queryComponents("\(key)[\(nestedKey)]", value)
-            }
-        } else if let array = value as? [AnyObject] {
-            for value in array {
-                components += queryComponents("\(key)[]", value)
-            }
-        } else {
-            components.append((escape(key), escape("\(value)")))
-        }
+        components.append((escape(key), escape(value)))
 
         return components
     }
