@@ -25,6 +25,7 @@ public class OAuthClient: Client {
     public func requestToken(for grantType: OAuthGrantType, completion: @escaping (Result<OAuthAccessToken, Error>) -> Void) {
         var request = URLRequest(url: serverConnection.serverURL)
         request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpBody = try? JSONEncoder().encode(buildParamsForRequest(grant: grantType))
 
         session.dataTask(with: request) { [weak self] (data, response, error) in
