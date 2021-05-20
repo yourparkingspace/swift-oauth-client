@@ -16,9 +16,11 @@ class OAuthClientTests: XCTestCase {
 
     let keychain = MockKeychainInteractor()
 
-    let connection = OAuthServerConnection(url: URL(string: "https://test.com")!,
-                                           clientID: "1",
-                                           clientSecret: "abcdef")
+    let connectionBuilder = {
+        OAuthServerConnection(url: URL(string: "https://test.com")!,
+                                     clientID: "1",
+                                     clientSecret: "abcdef")
+    }
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -27,8 +29,8 @@ class OAuthClientTests: XCTestCase {
         let urlSession = URLSession.init(configuration: configuration)
 
         client = OAuthClient(session: urlSession,
-                             connection: connection,
-                             keychain: keychain)
+                             keychain: keychain,
+                             connectionBuilder: connectionBuilder)
     }
 
     override func tearDownWithError() throws {
@@ -205,7 +207,9 @@ class OAuthClientTests: XCTestCase {
         let configuration = URLSessionConfiguration.default
         configuration.protocolClasses = [MockURLProtocol.self]
         let urlSession = URLSession.init(configuration: configuration)
-        let failureClient = OAuthClient(session: urlSession, connection: connection, keychain: failingKeychain)
+        let failureClient = OAuthClient(session: urlSession,
+                                        keychain: failingKeychain,
+                                        connectionBuilder: connectionBuilder)
 
         failureClient.requestToken(for: OAuthGrantType.password("test@test.com", "password")) { (result) in
             switch result {
