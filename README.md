@@ -21,11 +21,13 @@ Its entirely possible to use custom grant types with this package. Simply use th
 ## Using OAuthClient
 
 ```swift
-let connection = OAuthServerConnection(url: URL(string: "https://test.com")!,
-                                       clientID: "1",
-                                       clientSecret: "abcdef")
+let connectionBuilder = {
+    OAuthServerConnection(url: URL(string: "https://test.com")!,
+                          clientID: "1",
+                          clientSecret: "abcdef")
+}
                                        
-let client = OAuthClient(connection: connection)
+let client = OAuthClient(connectionBuilder: connectionBuilder)
 
 client.requestToken(for: .clientCredentials) { (result) in
     switch result {
@@ -38,11 +40,13 @@ client.requestToken(for: .clientCredentials) { (result) in
 ```
 
 ```swift
-let connection = OAuthServerConnection(url: URL(string: "https://test.com")!,
-                                       clientID: "1",
-                                       clientSecret: "abcdef")
+let connectionBuilder = {
+    OAuthServerConnection(url: URL(string: "https://test.com")!,
+                          clientID: "1",
+                          clientSecret: "abcdef")
+}
                                        
-let client = OAuthClient(connection: connection)
+let client = OAuthClient(connectionBuilder: connectionBuilder)
 
 client.fetchStoredToken(type: .clientCredentials) { (result) in
     switch result {

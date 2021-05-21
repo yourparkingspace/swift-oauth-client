@@ -11,15 +11,19 @@ public class OAuthClient: Client {
     private let keychainHelper: KeychainInteractor
 
     private let session: URLSession
-
-    private let serverConnection: OAuthServerConnection
-
+    
+    private let serverConnectionBuilder: () -> OAuthServerConnection
+    
+    private var serverConnection: OAuthServerConnection {
+        serverConnectionBuilder()
+    }
+    
     public init(session: URLSession = URLSession(configuration: .default),
-                connection: OAuthServerConnection,
-                keychain: KeychainInteractor? = nil) {
+                keychain: KeychainInteractor? = nil,
+                connectionBuilder: @escaping () -> OAuthServerConnection) {
         self.session = session
-        self.serverConnection = connection
         self.keychainHelper = keychain ?? KeychainHelper()
+        self.serverConnectionBuilder = connectionBuilder
     }
 
     public func requestToken(for grantType: OAuthGrantType, completion: @escaping (Result<OAuthAccessToken, Error>) -> Void) {
