@@ -32,6 +32,13 @@ public struct OAuthAccessToken: Codable {
         refreshToken = try values.decodeIfPresent(String.self, forKey: .refreshToken)
     }
 
+    public init(accessToken: String, tokenType: String, expiresAt: Date, refreshToken: String?) {
+        self.accessToken = accessToken
+        self.tokenType = tokenType
+        self.expiresAt = expiresAt
+        self.refreshToken = refreshToken
+    }
+
     public func isExpired() -> Bool {
         return expiresAt <= Date()
     }

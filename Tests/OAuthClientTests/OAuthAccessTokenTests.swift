@@ -49,4 +49,21 @@ class OAuthAccessTokenTests: XCTestCase {
 
         XCTAssertFalse(response.isExpired())
     }
+
+    func testManualInitSetsCorrectValues() {
+        let accessToken = "abc123"
+        let tokenType = "Bearer"
+        let expiresAt = Date().addingTimeInterval(3600)
+        let refreshToken = "def456"
+
+        let token = OAuthAccessToken(accessToken: accessToken,
+                                           tokenType: tokenType,
+                                           expiresAt: expiresAt,
+                                           refreshToken: refreshToken)
+
+        XCTAssertEqual(token.accessToken, accessToken)
+        XCTAssertEqual(token.tokenType, tokenType)
+        XCTAssertEqual(token.expiresAt, expiresAt)
+        XCTAssertEqual(token.refreshToken, refreshToken)
+    }
 }
