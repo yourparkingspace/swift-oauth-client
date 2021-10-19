@@ -17,6 +17,8 @@ public class OAuthClient: Client {
     private var serverConnection: OAuthServerConnection {
         serverConnectionBuilder()
     }
+
+    private let tokenURLUserDefaultsKey = "oauth_client_token_url"
     
     public init(session: URLSession = URLSession(configuration: .default),
                 keychain: KeychainInteractor? = nil,
@@ -24,6 +26,20 @@ public class OAuthClient: Client {
         self.session = session
         self.keychainHelper = keychain ?? KeychainHelper()
         self.serverConnectionBuilder = connectionBuilder
+
+        let defaults = UserDefaults.standard
+        let newTokenURL = serverConnection.serverURL.absoluteString
+
+        if let storedTokenURL = defaults.string(forKey: tokenURLUserDefaultsKey) {
+
+            if storedTokenURL != newTokenURL {
+                clearTokens()
+                defaults.set(newTokenURL, forKey: tokenURLUserDefaultsKey)
+            }
+        } else {
+            defaults.set(newTokenURL, forKey: tokenURLUserDefaultsKey)
+            clearTokens()
+        }
     }
 
     public func requestToken(for grantType: OAuthGrantType, completion: @escaping (Result<OAuthAccessToken, Error>) -> Void) {
@@ -114,6 +130,11 @@ public class OAuthClient: Client {
 
     public func logout() {
         let _ = keychainHelper.remove(withKey: OAuthGrantType.password("", "").storageKey)
+    }
+
+    public func clearTokens() {
+        let _ = keychainHelper.remove(withKey: OAuthGrantType.password("", "").storageKey)
+        let _ = keychainHelper.remove(withKey: OAuthGrantType.clientCredentials.storageKey)
     }
 
     private func buildParamsForRequest(grant: OAuthGrantType) -> [String: String] {

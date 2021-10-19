@@ -22,6 +22,12 @@ class OAuthClientTests: XCTestCase {
                                      clientSecret: "abcdef")
     }
 
+    let stagingConnectionBuilder = {
+        OAuthServerConnection(url: URL(string: "https://staging.test.com")!,
+                              clientID: "1",
+                              clientSecret: "abcdef")
+    }
+
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         let configuration = URLSessionConfiguration.default
@@ -35,8 +41,8 @@ class OAuthClientTests: XCTestCase {
 
     override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
-        keychainHelper.remove(withKey: OAuthGrantType.clientCredentials.storageKey)
-        keychainHelper.remove(withKey: OAuthGrantType.password("", "").storageKey)
+        let _ = keychain.remove(withKey: OAuthGrantType.clientCredentials.storageKey)
+        let _ = keychain.remove(withKey: OAuthGrantType.password("", "").storageKey)
     }
 
     func testClientCanDecodeTokenWhenRequested() throws {
@@ -44,8 +50,6 @@ class OAuthClientTests: XCTestCase {
         let mockToken = TestStrings.oAuthTokenResponse.data(using: .utf8)
 
         let expect = expectation(description: "Token is returned")
-
-
 
         MockURLProtocol.requestHandler = { request in
             let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
@@ -416,5 +420,109 @@ class OAuthClientTests: XCTestCase {
         }
 
         waitForExpectations(timeout: 5, handler: nil)
+    }
+
+    func testTokensAreClearedWhenURLChanges() throws {
+        let _ = keychain.remove(withKey: "password")
+        let _ = keychain.remove(withKey: "client")
+
+        let jsonData = TestStrings.oAuthTokenResponseExpiredWithRefresh.data(using: .utf8)
+
+        let tokenToStore = try JSONDecoder().decode(OAuthAccessToken.self, from: jsonData!)
+
+        try keychain.add(tokenToStore, withKey: "password")
+        try keychain.add(tokenToStore, withKey: "client")
+
+        XCTAssertEqual(keychain.keychainItems.count, 2)
+
+        let passwordToken: OAuthAccessToken? = try? keychain.read(withKey: "password")
+        let clientToken: OAuthAccessToken? = try? keychain.read(withKey: "client")
+
+        XCTAssertNotNil(passwordToken)
+        XCTAssertNotNil(clientToken)
+
+
+        let configuration = URLSessionConfiguration.default
+        configuration.protocolClasses = [MockURLProtocol.self]
+        let urlSession = URLSession.init(configuration: configuration)
+
+        let _ = OAuthClient(session: urlSession,
+                             keychain: keychain,
+                             connectionBuilder: stagingConnectionBuilder)
+
+        let newPasswordToken: OAuthAccessToken? = try? keychain.read(withKey: "password")
+        let newClientToken: OAuthAccessToken? = try? keychain.read(withKey: "client")
+
+        XCTAssertNil(newPasswordToken)
+        XCTAssertNil(newClientToken)
+
+    }
+
+    func testTokensAreNotClearedWhenURLIsNotChanged() throws {
+        let _ = keychain.remove(withKey: "password")
+        let _ = keychain.remove(withKey: "client")
+
+        let jsonData = TestStrings.oAuthTokenResponseExpiredWithRefresh.data(using: .utf8)
+
+        let tokenToStore = try JSONDecoder().decode(OAuthAccessToken.self, from: jsonData!)
+
+        try keychain.add(tokenToStore, withKey: "password")
+        try keychain.add(tokenToStore, withKey: "client")
+
+        XCTAssertEqual(keychain.keychainItems.count, 2)
+
+        let passwordToken: OAuthAccessToken? = try? keychain.read(withKey: "password")
+        let clientToken: OAuthAccessToken? = try? keychain.read(withKey: "client")
+
+        XCTAssertNotNil(passwordToken)
+        XCTAssertNotNil(clientToken)
+
+
+        let configuration = URLSessionConfiguration.default
+        configuration.protocolClasses = [MockURLProtocol.self]
+        let urlSession = URLSession.init(configuration: configuration)
+
+        let _ = OAuthClient(session: urlSession,
+                             keychain: keychain,
+                             connectionBuilder: connectionBuilder)
+
+        let newPasswordToken: OAuthAccessToken? = try? keychain.read(withKey: "password")
+        let newClientToken: OAuthAccessToken? = try? keychain.read(withKey: "client")
+
+        XCTAssertNotNil(newPasswordToken)
+        XCTAssertNotNil(newClientToken)
+
+        XCTAssertEqual(passwordToken?.accessToken, newPasswordToken?.accessToken)
+        XCTAssertEqual(clientToken?.accessToken, newClientToken?.accessToken)
+    }
+
+    func testClearTokensActuallyClearsTokens() throws {
+        let _ = keychain.remove(withKey: "password")
+        let _ = keychain.remove(withKey: "client")
+
+        let jsonData = TestStrings.oAuthTokenResponseExpiredWithRefresh.data(using: .utf8)
+
+        let tokenToStore = try JSONDecoder().decode(OAuthAccessToken.self, from: jsonData!)
+
+        try keychain.add(tokenToStore, withKey: "password")
+        try keychain.add(tokenToStore, withKey: "client")
+
+        XCTAssertEqual(keychain.keychainItems.count, 2)
+
+        let passwordToken: OAuthAccessToken? = try? keychain.read(withKey: "password")
+        let clientToken: OAuthAccessToken? = try? keychain.read(withKey: "client")
+
+        XCTAssertNotNil(passwordToken)
+        XCTAssertNotNil(clientToken)
+
+        client.clearTokens()
+
+        let clearedPasswordToken: OAuthAccessToken? = try? keychain.read(withKey: "password")
+        let clearedClientToken: OAuthAccessToken? = try? keychain.read(withKey: "client")
+
+        XCTAssertNil(clearedClientToken)
+        XCTAssertNil(clearedPasswordToken)
+
+        XCTAssertEqual(keychain.keychainItems.count, 0)
     }
 }

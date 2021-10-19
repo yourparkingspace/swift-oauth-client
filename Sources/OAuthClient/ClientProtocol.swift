@@ -11,4 +11,5 @@ public protocol Client {
     func requestToken(for grantType: OAuthGrantType, completion: @escaping (Result<OAuthAccessToken, Error>) -> Void)
     func fetchStoredToken(type: OAuthGrantType, completion: @escaping (Result<OAuthAccessToken, Error>) -> Void)
     func logout()
+    func clearTokens()
 }
