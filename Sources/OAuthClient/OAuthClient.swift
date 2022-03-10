@@ -114,7 +114,7 @@ public class OAuthClient: Client {
 
                 successBlock(requestToReturn)
             case .failure(_):
-                fetchStoredToken(type: .clientCredentials) { clientResult in
+                self.fetchStoredToken(type: .clientCredentials) { clientResult in
                     switch clientResult {
                     case .success(let clientToken):
                         var requestToReturn = request
@@ -122,7 +122,7 @@ public class OAuthClient: Client {
 
                         successBlock(requestToReturn)
                     case .failure(_):
-                        requestToken(for: .clientCredentials) { newClientCredentialsResult in
+                        self.requestToken(for: .clientCredentials) { newClientCredentialsResult in
                             switch newClientCredentialsResult {
                             case .success(let newClientToken):
                                 var requestToReturn = request
