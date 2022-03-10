@@ -103,6 +103,42 @@ public class OAuthClient: Client {
         }.resume()
     }
 
+    public func authenticateRequest(_ request: URLRequest, successBlock: @escaping (URLRequest) -> Void, errorBlock: @escaping (Error?) -> Void) {
+
+        fetchStoredToken(type: .password("", "")) { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success(let token):
+                var requestToReturn = request
+                requestToReturn.addValue("Bearer \(token.accessToken)", forHTTPHeaderField: "Authorization")
+
+                successBlock(requestToReturn)
+            case .failure(_):
+                fetchStoredToken(type: .clientCredentials) { clientResult in
+                    switch clientResult {
+                    case .success(let clientToken):
+                        var requestToReturn = request
+                        requestToReturn.addValue("Bearer \(clientToken.accessToken)", forHTTPHeaderField: "Authorization")
+
+                        successBlock(requestToReturn)
+                    case .failure(_):
+                        requestToken(for: .clientCredentials) { newClientCredentialsResult in
+                            switch newClientCredentialsResult {
+                            case .success(let newClientToken):
+                                var requestToReturn = request
+                                requestToReturn.addValue("Bearer \(newClientToken.accessToken)", forHTTPHeaderField: "Authorization")
+
+                                successBlock(requestToReturn)
+                            case .failure(let clientCredentialsTokenError):
+                                errorBlock(clientCredentialsTokenError)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public func fetchStoredToken(type: OAuthGrantType, completion: @escaping (Result<OAuthAccessToken, Error>) -> Void) {
         do {
             let token: OAuthAccessToken = try keychainHelper.read(withKey: type.storageKey)
