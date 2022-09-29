@@ -50,9 +50,9 @@ public class OAuthClient: Client {
 		request.setHTTPAuthorization(.basicAuthentication(username: serverConnection.clientID, password: serverConnection.clientSecret))
 		request.setHTTPBody(parameters: buildParamsForRequest(grant: grantType))
 
-		let (data, _) = try await session.shared.data(request: request)
+		let (data, _) = try await session.shared.data(for: request)
 
-		let token = try JSONDecoder().decode(OAuthAccessToken.self, from data)
+		let token = try JSONDecoder().decode(OAuthAccessToken.self, from: data)
 		let _ = self.keychainHelper.update(token, withKey: grantType.storageKey)
 		return token
 
@@ -65,9 +65,9 @@ public class OAuthClient: Client {
 		return try await requestToken(for: .refresh(token.refreshToken))
 	}
 
-	public func authenticateRequestWithPassword(_ request: URLRequest, grantType: OAuthGrantType) async throws -> URLRequest {
+	public func authenticateRequest(_ request: URLRequest, grantType: OAuthGrantType) async throws -> URLRequest {
 		let token = try await fetchStoredToken(type: grantType)
-		let requestToReturn = request
+		var requestToReturn = request
 		requestToReturn.addValue("Bearer \(token.accessToken)", forHTTPHeaderField: "Authorization")
 		return requestToReturn
 	}
