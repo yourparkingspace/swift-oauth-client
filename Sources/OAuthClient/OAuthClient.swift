@@ -42,127 +42,35 @@ public class OAuthClient: Client {
         }
     }
 
-    public func requestToken(for grantType: OAuthGrantType, completion: @escaping (Result<OAuthAccessToken, Error>) -> Void) {
-        var request = URLRequest(url: serverConnection.serverURL)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        
-        request.setHTTPAuthorization(.basicAuthentication(username: serverConnection.clientID, password: serverConnection.clientSecret))
-        request.setHTTPBody(parameters: buildParamsForRequest(grant: grantType))
+	public func requestToken(for grantType: OAuthGrantType) async throws -> OAuthAccessToken {
+		var request = URLRequest(url: serverConnection.serverURL)
+		request.httpMethod = "POST"
+		request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
+		request.setHTTPAuthorization(.basicAuthentication(username: serverConnection.clientID, password: serverConnection.clientSecret))
+		request.setHTTPBody(parameters: buildParamsForRequest(grant: grantType))
 
-        session.dataTask(with: request) { [weak self] (data, response, error) in
-            guard let self = self else { return }
-            guard error == nil else {
-                DispatchQueue.main.async {
-                    completion(.failure(error!))
-                }
-                return
-            }
+		let (data, _) = try await session.shared.data(request: request)
 
-            guard let response = response as? HTTPURLResponse else {
-                DispatchQueue.main.async {
-                    completion(.failure(OAuthClientError.genericWithMessage("No Response")))
-                }
-                return
-            }
+		let token = try JSONDecoder().decode(OAuthAccessToken.self, from data)
+		let _ = self.keychainHelper.update(token, withKey: grantType.storageKey)
+		return token
 
-            if response.statusCode != 200 {
-                DispatchQueue.main.async {
-                    completion(.failure(OAuthClientError.genericWithMessage("Invalid status code. Expecting 200, got \(response.statusCode)")))
-                }
-                return
-            }
+	}
 
-            guard let data = data, data.isEmpty == false else {
-                DispatchQueue.main.async {
-                    completion(.failure(OAuthClientError.genericWithMessage("No data received")))
-                }
-                return
-            }
-            
-            let decoder = JSONDecoder()
+	public func fetchStoredToken(type: OAuthGrantType) async throws -> OAuthAccessToken {
+		let token = try keychainHelper.read(withKey: type.storageKey)
+		guard !token.isExpired() else { return token }
 
-            do {
-                let token = try decoder.decode(OAuthAccessToken.self, from: data)
+		return try await requestToken(for: .refresh(token.refreshToken))
+	}
 
-                DispatchQueue.main.async {
-                    let success = self.keychainHelper.update(token, withKey: grantType.storageKey)
-
-                    if success {
-                        completion(.success(token))
-                    } else {
-                        completion(.failure(OAuthClientError.genericWithMessage("Unable to store token")))
-                    }
-                }
-            } catch let error {
-                DispatchQueue.main.async {
-                    completion(.failure(error))
-                }
-            }
-        }.resume()
-    }
-
-    public func authenticateRequest(_ request: URLRequest, successBlock: @escaping (URLRequest) -> Void, errorBlock: @escaping (Error?) -> Void) {
-
-        fetchStoredToken(type: .password("", "")) { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let token):
-                var requestToReturn = request
-                requestToReturn.addValue("Bearer \(token.accessToken)", forHTTPHeaderField: "Authorization")
-
-                successBlock(requestToReturn)
-            case .failure(_):
-                self.fetchStoredToken(type: .clientCredentials) { clientResult in
-                    switch clientResult {
-                    case .success(let clientToken):
-                        var requestToReturn = request
-                        requestToReturn.addValue("Bearer \(clientToken.accessToken)", forHTTPHeaderField: "Authorization")
-
-                        successBlock(requestToReturn)
-                    case .failure(_):
-                        self.requestToken(for: .clientCredentials) { newClientCredentialsResult in
-                            switch newClientCredentialsResult {
-                            case .success(let newClientToken):
-                                var requestToReturn = request
-                                requestToReturn.addValue("Bearer \(newClientToken.accessToken)", forHTTPHeaderField: "Authorization")
-
-                                successBlock(requestToReturn)
-                            case .failure(let clientCredentialsTokenError):
-                                errorBlock(clientCredentialsTokenError)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public func fetchStoredToken(type: OAuthGrantType, completion: @escaping (Result<OAuthAccessToken, Error>) -> Void) {
-        do {
-            let token: OAuthAccessToken = try keychainHelper.read(withKey: type.storageKey)
-
-            if token.isExpired() {
-
-                guard let refreshToken = token.refreshToken else {
-
-                    let _ = keychainHelper.remove(withKey: type.storageKey)
-                    completion(.failure(OAuthClientError.tokenExpired))
-
-                    return
-                }
-
-                requestToken(for: OAuthGrantType.refresh(refreshToken), completion: completion)
-                return
-            }
-
-            completion(.success(token))
-
-        } catch let error {
-            completion(.failure(OAuthClientError.errorReadingTokenFromStorage(error)))
-        }
-    }
+	public func authenticateRequestWithPassword(_ request: URLRequest, grantType: OAuthGrantType) async throws -> URLRequest {
+		let token = try await fetchStoredToken(type: grantType)
+		let requestToReturn = request
+		requestToReturn.addValue("Bearer \(token.accessToken)", forHTTPHeaderField: "Authorization")
+		return requestToReturn
+	}
 
     public func logout() {
         let _ = keychainHelper.remove(withKey: OAuthGrantType.password("", "").storageKey)
