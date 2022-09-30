@@ -62,7 +62,9 @@ public class OAuthClient: Client {
         let token: OAuthAccessToken = try keychainHelper.read(withKey: type.storageKey)
 		guard !token.isExpired() else { return token }
 
-		return try await requestToken(for: .refresh(token.refreshToken))
+        if let refreshToken = token.refreshToken {
+            return try await requestToken(for: .refresh(refreshToken))
+        }
 	}
 
 	public func authenticateRequest(_ request: URLRequest, grantType: OAuthGrantType) async throws -> URLRequest {
