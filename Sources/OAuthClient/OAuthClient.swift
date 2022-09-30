@@ -59,12 +59,7 @@ public class OAuthClient: Client {
 	}
 
 	public func fetchStoredToken(type: OAuthGrantType) async throws -> OAuthAccessToken {
-        let token: OAuthAccessToken = try keychainHelper.read(withKey: type.storageKey)
-		guard !token.isExpired() else { return token }
-
-        if let refreshToken = token.refreshToken {
-            return try await requestToken(for: .refresh(refreshToken))
-        }
+        try keychainHelper.read(withKey: type.storageKey)
 	}
 
 	public func authenticateRequest(_ request: URLRequest, grantType: OAuthGrantType) async throws -> URLRequest {
