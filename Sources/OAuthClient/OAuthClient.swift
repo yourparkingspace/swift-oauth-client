@@ -66,7 +66,7 @@ public class OAuthClient: Client {
 	}
 
 	public func authenticateRequest(_ request: URLRequest, grantType: OAuthGrantType) async throws -> URLRequest {
-		let token = try await fetchStoredToken(type: grantType)
+        let token: OAuthAccessToken = try await fetchStoredToken(type: grantType)
 		var requestToReturn = request
 		requestToReturn.addValue("Bearer \(token.accessToken)", forHTTPHeaderField: "Authorization")
 		return requestToReturn
