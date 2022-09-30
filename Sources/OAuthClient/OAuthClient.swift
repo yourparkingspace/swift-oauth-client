@@ -59,7 +59,8 @@ public class OAuthClient: Client {
 	}
 
 	public func fetchStoredToken(type: OAuthGrantType) async throws -> OAuthAccessToken {
-        try keychainHelper.read(withKey: type.storageKey)
+        let token: OAuthAccessToken = try keychainHelper.read(withKey: type.storageKey)
+        return token
 	}
 
 	public func authenticateRequest(_ request: URLRequest, grantType: OAuthGrantType) async throws -> URLRequest {
