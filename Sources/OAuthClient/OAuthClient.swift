@@ -50,7 +50,7 @@ public class OAuthClient: Client {
 		request.setHTTPAuthorization(.basicAuthentication(username: serverConnection.clientID, password: serverConnection.clientSecret))
 		request.setHTTPBody(parameters: buildParamsForRequest(grant: grantType))
 
-		let (data, _) = try await session.shared.data(for: request)
+		let (data, _) = try await URLSession.shared.data(for: request)
 
 		let token = try JSONDecoder().decode(OAuthAccessToken.self, from: data)
 		let _ = self.keychainHelper.update(token, withKey: grantType.storageKey)
