@@ -122,7 +122,7 @@ public class OAuthClient: Client {
 
                         successBlock(requestToReturn)
                     case .failure(_):
-                        self.requestToken(for: .clientCredentials) { newClientCredentialsResult in
+                        self.requestToken(for: .clientCredentials) { [weak self] newClientCredentialsResult in
                             switch newClientCredentialsResult {
                             case .success(let newClientToken):
                                 var requestToReturn = request
@@ -130,6 +130,7 @@ public class OAuthClient: Client {
 
                                 successBlock(requestToReturn)
                             case .failure(let clientCredentialsTokenError):
+                                self?.clearTokens()
                                 errorBlock(clientCredentialsTokenError)
                             }
                         }
