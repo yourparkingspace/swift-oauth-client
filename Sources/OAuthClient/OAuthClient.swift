@@ -55,6 +55,9 @@ public class OAuthClient: Client {
             guard let self = self else { return }
             guard error == nil else {
                 DispatchQueue.main.async {
+                    if case .refresh = grantType {
+                        self.clearTokens()
+                    }
                     completion(.failure(error!))
                 }
                 return
@@ -62,6 +65,9 @@ public class OAuthClient: Client {
 
             guard let response = response as? HTTPURLResponse else {
                 DispatchQueue.main.async {
+                    if case .refresh = grantType {
+                        self.clearTokens()
+                    }
                     completion(.failure(OAuthClientError.genericWithMessage("No Response")))
                 }
                 return
@@ -69,6 +75,9 @@ public class OAuthClient: Client {
 
             if response.statusCode != 200 {
                 DispatchQueue.main.async {
+                    if case .refresh = grantType {
+                        self.clearTokens()
+                    }
                     completion(.failure(OAuthClientError.genericWithMessage("Invalid status code. Expecting 200, got \(response.statusCode)")))
                 }
                 return
@@ -76,6 +85,9 @@ public class OAuthClient: Client {
 
             guard let data = data, data.isEmpty == false else {
                 DispatchQueue.main.async {
+                    if case .refresh = grantType {
+                        self.clearTokens()
+                    }
                     completion(.failure(OAuthClientError.genericWithMessage("No data received")))
                 }
                 return

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum OAuthGrantType {
+public enum OAuthGrantType: Equatable {
     /// A client credentials grant type - no params needed
     case clientCredentials
 
