@@ -45,6 +45,47 @@ class OAuthClientTests: XCTestCase {
         let _ = keychain.remove(withKey: OAuthGrantType.password("", "").storageKey)
     }
 
+    func testTokensRemovedIfInvalidRefresh() throws {
+        let _ = keychain.remove(withKey: "password")
+        let _ = keychain.remove(withKey: "client")
+
+        let jsonData = TestStrings.oAuthTokenResponseExpiredWithRefresh.data(using: .utf8)
+
+        let tokenToStore = try JSONDecoder().decode(OAuthAccessToken.self, from: jsonData!)
+
+        try keychain.add(tokenToStore, withKey: "password")
+        try keychain.add(tokenToStore, withKey: "client")
+
+        XCTAssertEqual(keychain.keychainItems.count, 2)
+
+        let passwordToken: OAuthAccessToken? = try keychain.read(withKey: "password")
+        let clientToken: OAuthAccessToken? = try keychain.read(withKey: "client")
+
+        XCTAssertNotNil(passwordToken)
+        XCTAssertNotNil(clientToken)
+
+        MockURLProtocol.requestHandler = { request in
+            let response = HTTPURLResponse(url: request.url!, statusCode: 500, httpVersion: nil, headerFields: nil)!
+            return (response, nil)
+        }
+
+        let expect = expectation(description: "Token is returned")
+
+        client.requestToken(for: .refresh((passwordToken?.refreshToken)!), completion: { result in
+            switch result {
+            case .success(_):
+                XCTFail()
+            case .failure(_):
+                XCTAssertNil(self.keychain.keychainItems["password"])
+                XCTAssertNil(self.keychain.keychainItems["client"])
+                XCTAssertEqual(self.keychain.keychainItems.count, 0)
+                expect.fulfill()
+            }
+        })
+
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+
     func testClientCanDecodeTokenWhenRequested() throws {
         
         let mockToken = TestStrings.oAuthTokenResponse.data(using: .utf8)
