@@ -12,3 +12,16 @@ public enum OAuthClientError: Error {
     case tokenExpired
     case errorReadingTokenFromStorage(Error?)
 }
+
+extension OAuthClientError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .genericWithMessage(let message):
+            return NSLocalizedString("\(message)", comment: "")
+        case .tokenExpired:
+            return NSLocalizedString("Token expired", comment: "")
+        case .errorReadingTokenFromStorage(let error):
+            return NSLocalizedString("Error reading token from storage \(error?.localizedDescription ?? "")", comment: "")
+        }
+    }
+}
