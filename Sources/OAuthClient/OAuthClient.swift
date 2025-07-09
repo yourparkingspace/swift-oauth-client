@@ -9,10 +9,10 @@ import Foundation
 
 public class OAuthClient: Client {
     
-    public func updateStoredToken(type: OAuthGrantType, token: OAuthAccessToken, completion: @escaping (Result<Bool, any Error>) -> Void) {
+    public func updateStoredToken(token: OAuthAccessToken, completion: @escaping (Result<Bool, any Error>) -> Void) {
         do {
             DispatchQueue.main.async {
-                let success = self.keychainHelper.update(token, withKey: type.storageKey)
+                let success = self.keychainHelper.update(token, withKey: token.tokenType)
                 if success {
                     completion(.success(true))
                 } else {
