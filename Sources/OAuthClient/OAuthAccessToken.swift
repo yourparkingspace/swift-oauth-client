@@ -40,6 +40,7 @@ public struct OAuthAccessToken: Codable {
     }
 
     public func isExpired() -> Bool {
+        print("token expiry: \(expiresAt)")
         return expiresAt <= Date()
     }
 }
