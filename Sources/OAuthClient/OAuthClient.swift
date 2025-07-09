@@ -8,6 +8,20 @@
 import Foundation
 
 public class OAuthClient: Client {
+    
+    public func updateStoredToken(type: OAuthGrantType, token: OAuthAccessToken, completion: @escaping (Result<Bool, any Error>) -> Void) {
+        do {
+            DispatchQueue.main.async {
+                let success = self.keychainHelper.update(token, withKey: type.storageKey)
+                if success {
+                    completion(.success(true))
+                } else {
+                    completion(.failure(OAuthClientError.genericWithMessage("Unable to store token")))
+                }
+            }
+        }
+    }
+    
     private let keychainHelper: KeychainInteractor
 
     private let session: URLSession
