@@ -98,8 +98,6 @@ public class OAuthClient: Client {
 
             do {
                 let token = try decoder.decode(OAuthAccessToken.self, from: data)
-                print("stored token \(token)")
-                print("storage key \(grantType.storageKey)")
                 DispatchQueue.main.async {
                     let success = self.keychainHelper.update(token, withKey: grantType.storageKey)
 
@@ -195,11 +193,10 @@ public class OAuthClient: Client {
         return params
     }
     
-    public func updateStoredToken(token: OAuthAccessToken, completion: @escaping (Result<Bool, any Error>) -> Void) {
+    public func updateStoredToken(token: OAuthAccessToken, storageKey: String,completion: @escaping (Result<Bool, any Error>) -> Void) {
         do {
             DispatchQueue.main.async {
-                print("stored token new \(token)")
-                let success = self.keychainHelper.update(token, withKey: "password")
+                let success = self.keychainHelper.update(token, withKey: storageKey)
                 if success {
                     completion(.success(true))
                 } else {
