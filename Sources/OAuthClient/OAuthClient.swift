@@ -204,6 +204,7 @@ public class OAuthClient: Client {
                 } else {
                     completion(.failure(OAuthClientError.genericWithMessage("Unable to store token")))
                 }
+                completion(.success(true))
             }
         }
     }
