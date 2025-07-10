@@ -197,7 +197,7 @@ public class OAuthClient: Client {
     public func updateStoredToken(token: OAuthAccessToken, completion: @escaping (Result<Bool, any Error>) -> Void) {
         do {
             DispatchQueue.main.async {
-                print("update token $token.tokenType")
+                print("stored token new \(token)")
                 let success = self.keychainHelper.update(token, withKey: token.tokenType)
                 if success {
                     completion(.success(true))
