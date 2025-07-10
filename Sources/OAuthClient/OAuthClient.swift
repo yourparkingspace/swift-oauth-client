@@ -8,6 +8,7 @@
 import Foundation
 
 public class OAuthClient: Client {
+    
     private let keychainHelper: KeychainInteractor
 
     private let session: URLSession
@@ -97,7 +98,6 @@ public class OAuthClient: Client {
 
             do {
                 let token = try decoder.decode(OAuthAccessToken.self, from: data)
-
                 DispatchQueue.main.async {
                     let success = self.keychainHelper.update(token, withKey: grantType.storageKey)
 
@@ -192,4 +192,18 @@ public class OAuthClient: Client {
 
         return params
     }
+    
+    public func updateStoredToken(token: OAuthAccessToken, storageKey: String,completion: @escaping (Result<Bool, any Error>) -> Void) {
+        do {
+            DispatchQueue.main.async {
+                let success = self.keychainHelper.update(token, withKey: storageKey)
+                if success {
+                    completion(.success(true))
+                } else {
+                    completion(.failure(OAuthClientError.genericWithMessage("Unable to store token")))
+                }
+            }
+        }
+    }
+    
 }

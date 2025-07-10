@@ -566,4 +566,20 @@ class OAuthClientTests: XCTestCase {
 
         XCTAssertEqual(keychain.keychainItems.count, 0)
     }
+    
+    func testTokenStoredCorrectly() throws {
+        let expect = expectation(description: "token is stored correctly")
+        let jsonData = TestStrings.oAuthTokenResponse.data(using: .utf8)
+        let tokenToStore = try JSONDecoder().decode(OAuthAccessToken.self, from: jsonData!)
+        client.updateStoredToken(token: tokenToStore, storageKey: "password"){ (result) in
+            switch result {
+            case .success(let ok):
+                XCTAssertEqual(ok, true)
+                expect.fulfill()
+            case .failure(_):
+                XCTFail("expecting success - got error")
+            }
+        }
+        waitForExpectations(timeout: 5, handler: nil)
+    }
 }
