@@ -567,7 +567,7 @@ class OAuthClientTests: XCTestCase {
         XCTAssertEqual(keychain.keychainItems.count, 0)
     }
     
-    func tesTokenStoredCorrectly() throws {
+    func testTokenStoredCorrectly() throws {
         let expect = expectation(description: "token is stored correctly")
         let jsonData = TestStrings.oAuthTokenResponse.data(using: .utf8)
         let tokenToStore = try JSONDecoder().decode(OAuthAccessToken.self, from: jsonData!)
