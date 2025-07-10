@@ -199,7 +199,7 @@ public class OAuthClient: Client {
         do {
             DispatchQueue.main.async {
                 print("stored token new \(token)")
-                let success = self.keychainHelper.update(token, withKey: token.tokenType)
+                let success = self.keychainHelper.update(token, withKey: "password")
                 if success {
                     completion(.success(true))
                 } else {
