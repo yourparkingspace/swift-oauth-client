@@ -14,4 +14,5 @@ public protocol Client {
     func updateStoredToken(token: OAuthAccessToken, storageKey: String, completion: @escaping (Result<Bool, Error>) -> Void)
     func logout()
     func clearTokens()
+    //test
 }
