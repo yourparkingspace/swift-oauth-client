@@ -99,6 +99,7 @@ public class OAuthClient: Client {
             do {
                 let token = try decoder.decode(OAuthAccessToken.self, from: data)
                 print("stored token \(token)")
+                print("storage key \(grantType.storageKey)")
                 DispatchQueue.main.async {
                     let success = self.keychainHelper.update(token, withKey: grantType.storageKey)
 
@@ -204,7 +205,6 @@ public class OAuthClient: Client {
                 } else {
                     completion(.failure(OAuthClientError.genericWithMessage("Unable to store token")))
                 }
-                completion(.success(true))
             }
         }
     }
