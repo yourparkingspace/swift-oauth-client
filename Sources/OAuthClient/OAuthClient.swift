@@ -79,6 +79,24 @@ public class OAuthClient: Client {
                     if case .refresh = grantType {
                         self.clearTokens()
                     }
+                    
+                    if case .password(let username, let pass) = grantType {
+                        // Try and decode response
+                        guard let data = data, data.isEmpty == false else {
+                            completion(.failure(OAuthClientError.genericWithMessage("Invalid status code. Expecting 200, got \(response.statusCode)")))
+                            return
+                        }
+                        
+                        do {
+                            let decoder = JSONDecoder()
+                            let twoFactorResponse = try decoder.decode(TwoFactorResponse.self, from: data)
+                            completion(.failure(OAuthClientError.requires2fa(twoFactorResponse)))
+                            return
+                        } catch let error {
+                            completion(.failure(OAuthClientError.genericWithMessage("Invalid status code and invalid two factor response. Expecting 200, got \(response.statusCode)")))
+                            return
+                        }
+                    }
                     completion(.failure(OAuthClientError.genericWithMessage("Invalid status code. Expecting 200, got \(response.statusCode)")))
                 }
                 return

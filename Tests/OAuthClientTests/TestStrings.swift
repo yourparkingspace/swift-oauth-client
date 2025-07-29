@@ -49,4 +49,22 @@ class TestStrings {
           "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6Ijg1Y2ZlNzM5Y2U5MGIyYjUzMzQ2NTJmMDk0NmE3MWE3MWU3MGQ3NGU2ZTQxN2QyNGJlMTIyZTM2ZWExZDExODMxNTFmNzI1ODgxOGU0YWMwIn0.eyJhdWQiOiIxODIyYjdkNmRlZGRjOTQzZDEyZDAwODc3OTM2MzU3ZCIsImp0aSI6Ijg1Y2ZlNzM5Y2U5MGIyYjUzMzQ2NTJmMDk0NmE3MWE3MWU3MGQ3NGU2ZTQxN2QyNGJlMTIyZTM2ZWExZDExODMxNTFmNzI1ODgxOGU0YWMwIiwiaWF0IjoxNjEzMTE3OTk0LCJuYmYiOjE2MTMxMTc5OTQsImV4cCI6MTY0NDY1Mzk5NCwic3ViIjoiMjk3ODc2Iiwic2NvcGVzIjpbXX0.mDiQBX-M52kWy0UyY6wrPwICZ_CH1_dbB_oFbzl6eNSaN2HjyvqLirpQ2lWyhlGTKtkyRQ0m1966PWLvdCrCZRVyOBMII_gICZO8KI7pJGCFueczA1X7_gX4K6RCxbpS01uLSJZk1-z1c-SJSQyXUBfT2JFJk0MXcc2jd6UDp-NYy_QnBVS-G-NS6GHO9IfL1ihE9DR-iy98-7GZ1S_roMS_R21XxYY8h-ZYdO31n1SWF38rj1jAyXcZqXS7UNZgou81AcFJlF-cZPRdrUi8l7wMHnyhwGGBLDdmz4QjCDaMwJxd_U6bCbtDA4hAw6tkAcFe7mpTqgrXRrn9rNVYCqvvv_B0R6Ooa22Hxwim8LVQGbzVbQYiOKZox1p4zoP-qTIv2jGTjioukIlDMkC5ifKNNYO1WXY2K07xqIKIxwaJTRzNY6Ib9VJwcoONi0SFGWBu92yFnSnsIg3-v8wQYa8Wc5JU_MHZYowM7ubR8GiXZ_uHpPpUshOAWA64jdQswaXpJ7ZuOTMrLaXvtMbc0IXfonWuhKXlJMQh5SQ1xLjPnjyTD2PXXCK3V2DlZazMv3otjUkUQT2WQ2mqFdLlN8r73mifop3Cme2H-j7DVx_VUTyCZSeO_nLCqM-SXktUA8crEH5KYF-5mCqN-5i16QGiXq9NuaOAU1phY5dt6Uk"
         }
         """
+    
+    static let twoFactorResponse = """
+        {
+            "result": "requires-two-factor",
+            "schemes": {
+                "email": {
+                    "configured": true,
+                    "trigger_route": "http://yourparkingspace.localhost:8080/api/v2/auth/two_factor_trigger?user_id=886298&nonce=qNH9UcPcrYVnXWJjP90%2FM%2B1c%2FXHgrJBLXVy27JDPZJs%3D&scheme=email",
+                    "destination": "******iller@yourparkingspace.co.uk"
+                },
+                "sms": {
+                    "configured": false,
+                    "trigger_route": null,
+                    "destination": null
+                }
+            }
+        }
+        """
 }

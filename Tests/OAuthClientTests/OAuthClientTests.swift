@@ -130,6 +130,36 @@ class OAuthClientTests: XCTestCase {
 
         waitForExpectations(timeout: 5, handler: nil)
     }
+    
+    func testTwoFactorResponseIsHandled() throws {
+        let mockResponse = TestStrings.twoFactorResponse.data(using: .utf8)
+        
+        let expect = expectation(description: "Two factor response is decoded and returned with error")
+        
+        MockURLProtocol.requestHandler = { request in
+            let response = HTTPURLResponse(url: request.url!, statusCode: 401, httpVersion: nil, headerFields: nil)!
+            return (response, mockResponse!)
+        }
+        
+        client.requestToken(for: .password("test@test.com", "Testing1234")) { result in
+            switch result {
+            case .success(_):
+                XCTFail("Expecting failure, got success")
+            case .failure(let error):
+                XCTAssertTrue(error is OAuthClientError)
+                let decodedError = error as? OAuthClientError
+                switch decodedError {
+                case .requires2fa(let twoFAResponse):
+                    XCTAssertEqual(twoFAResponse.result, "requires-two-factor")
+                    expect.fulfill()
+                default:
+                    XCTFail("Incorrect error type")
+                }
+            }
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
 
     func testResponseStatusCodeIsHandledGracefully() throws {
         let expect = expectation(description: "Result is returned but failed due to incorrect status code")
