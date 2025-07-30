@@ -80,7 +80,7 @@ public class OAuthClient: Client {
                         self.clearTokens()
                     }
                     
-                    if case .password(let username, let pass) = grantType {
+                    if case .password(_, _, _, _) = grantType {
                         // Try and decode response
                         guard let data = data, data.isEmpty == false else {
                             completion(.failure(OAuthClientError.genericWithMessage("Invalid status code. Expecting 200, got \(response.statusCode)")))
@@ -90,9 +90,11 @@ public class OAuthClient: Client {
                         do {
                             let decoder = JSONDecoder()
                             let twoFactorResponse = try decoder.decode(TwoFactorResponse.self, from: data)
-                            completion(.failure(OAuthClientError.requires2fa(twoFactorResponse)))
-                            return
-                        } catch let error {
+                            if twoFactorResponse.result == "requires-two-factor" {
+                                completion(.failure(OAuthClientError.requires2fa(twoFactorResponse)))
+                                return
+                            }
+                        } catch _ {
                             completion(.failure(OAuthClientError.genericWithMessage("Invalid status code and invalid two factor response. Expecting 200, got \(response.statusCode)")))
                             return
                         }
@@ -135,7 +137,7 @@ public class OAuthClient: Client {
 
     public func authenticateRequest(_ request: URLRequest, successBlock: @escaping (URLRequest) -> Void, errorBlock: @escaping (Error?) -> Void) {
 
-        fetchStoredToken(type: .password("", "")) { [weak self] result in
+        fetchStoredToken(type: .password("", "", nil, nil)) { [weak self] result in
             guard let self = self else { return }
             switch result {
             case .success(let token):
@@ -195,11 +197,11 @@ public class OAuthClient: Client {
     }
 
     public func logout() {
-        let _ = keychainHelper.remove(withKey: OAuthGrantType.password("", "").storageKey)
+        let _ = keychainHelper.remove(withKey: OAuthGrantType.password("", "", nil, nil).storageKey)
     }
 
     public func clearTokens() {
-        let _ = keychainHelper.remove(withKey: OAuthGrantType.password("", "").storageKey)
+        let _ = keychainHelper.remove(withKey: OAuthGrantType.password("", "", nil, nil).storageKey)
         let _ = keychainHelper.remove(withKey: OAuthGrantType.clientCredentials.storageKey)
     }
 

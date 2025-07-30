@@ -23,7 +23,7 @@ extension OAuthClientError: LocalizedError {
             return NSLocalizedString("Token expired", comment: "")
         case .errorReadingTokenFromStorage(let error):
             return NSLocalizedString("Error reading token from storage \(error?.localizedDescription ?? "")", comment: "")
-        case .requires2fa(let response):
+        case .requires2fa(_):
             return NSLocalizedString("Requires 2FA", comment: "")
         }
     }

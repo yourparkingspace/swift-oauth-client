@@ -30,7 +30,7 @@ class OAuthGrantTypeTests: XCTestCase {
     }
 
     func testPasswordGrantHasCorrectParams() {
-        let grantType = OAuthGrantType.password("test@test.com", "Testing1234")
+        let grantType = OAuthGrantType.password("test@test.com", "Testing1234", nil, nil)
 
         let params = grantType.params
 
@@ -38,6 +38,18 @@ class OAuthGrantTypeTests: XCTestCase {
         XCTAssertEqual(params["username"], "test@test.com")
         XCTAssertEqual(params["password"], "Testing1234")
         XCTAssertEqual(params.count, 3)
+    }
+    
+    func testPasswordGrantHasCorrectParamsForTwoFactor() {
+        let grantType = OAuthGrantType.password("test@test.com", "Testing1234", "email", "123456")
+        
+        let params = grantType.params
+        XCTAssertEqual(params["grant_type"], "password")
+        XCTAssertEqual(params["username"], "test@test.com")
+        XCTAssertEqual(params["password"], "Testing1234")
+        XCTAssertEqual(params["two_factor_scheme"], "email")
+        XCTAssertEqual(params["two_factor_code"], "123456")
+        XCTAssertEqual(params.count, 5)
     }
 
     func testRefreshGrantHasCorrectParams() {
@@ -69,7 +81,7 @@ class OAuthGrantTypeTests: XCTestCase {
         let clientCredentialsGrantType = OAuthGrantType.clientCredentials
         XCTAssertEqual(clientCredentialsGrantType.storageKey, "client")
 
-        let passwordGrantType = OAuthGrantType.password("", "")
+        let passwordGrantType = OAuthGrantType.password("", "", nil, nil)
         XCTAssertEqual(passwordGrantType.storageKey, "password")
 
 
