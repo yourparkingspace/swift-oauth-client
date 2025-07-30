@@ -15,8 +15,10 @@ public enum OAuthGrantType: Equatable {
     ///
     /// - parameter username: The username to log in with.
     /// - parameter password: The password to log in with.
+    /// - parameter twoFactorScheme: The string representation of the two factor scheme used
+    /// - parameter twoFactorCode: The two factor code
     ///
-    case password(String, String)
+    case password(String, String, String?, String?)
 
     /// A refresh token grant
     ///
@@ -37,12 +39,21 @@ public enum OAuthGrantType: Equatable {
             return [
                 "grant_type": "client_credentials"
             ]
-        case .password(let username, let password):
-            return [
-                "grant_type": "password",
-                "username": username,
-                "password": password,
-            ]
+        case .password(let username, let password, let twoFactorScheme, let twoFactorCode):
+            var tempParams: [String : String] = [:]
+            
+            tempParams["grant_type"] = "password"
+            tempParams["username"] = username
+            tempParams["password"] = password
+            
+            if let twoFactorScheme = twoFactorScheme {
+                tempParams["two_factor_scheme"] = twoFactorScheme
+            }
+            if let twoFactorCode = twoFactorCode {
+                tempParams["two_factor_code"] = twoFactorCode
+            }
+            
+            return tempParams
         case .refresh(let refreshToken):
             return [
                 "grant_type": "refresh_token",

@@ -42,7 +42,7 @@ class OAuthClientTests: XCTestCase {
     override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         let _ = keychain.remove(withKey: OAuthGrantType.clientCredentials.storageKey)
-        let _ = keychain.remove(withKey: OAuthGrantType.password("", "").storageKey)
+        let _ = keychain.remove(withKey: OAuthGrantType.password("", "", nil, nil).storageKey)
     }
 
     func testTokensRemovedIfInvalidRefresh() throws {
@@ -97,7 +97,7 @@ class OAuthClientTests: XCTestCase {
             return (response, mockToken!)
         }
 
-        client.requestToken(for: .password("email@email.com", "password")) { (result) in
+        client.requestToken(for: .password("email@email.com", "password", nil, nil)) { (result) in
             switch result {
             case.success(_):
                 expect.fulfill()
@@ -119,7 +119,7 @@ class OAuthClientTests: XCTestCase {
             return (response, mockToken!)
         }
 
-        client.requestToken(for: .password("email@email.com", "password")) { (result) in
+        client.requestToken(for: .password("email@email.com", "password", nil, nil)) { (result) in
             switch result {
             case.success(_):
                 expect.fulfill()
@@ -141,7 +141,7 @@ class OAuthClientTests: XCTestCase {
             return (response, mockResponse!)
         }
         
-        client.requestToken(for: .password("test@test.com", "Testing1234")) { result in
+        client.requestToken(for: .password("test@test.com", "Testing1234", nil, nil)) { result in
             switch result {
             case .success(_):
                 XCTFail("Expecting failure, got success")
@@ -169,7 +169,7 @@ class OAuthClientTests: XCTestCase {
             return (response, nil)
         }
 
-        client.requestToken(for: .password("test@test.com", "password")) { (result) in
+        client.requestToken(for: .password("test@test.com", "password", nil, nil)) { (result) in
             switch result {
             case .success(_):
                 XCTFail("Token was returned - expected failure")
@@ -196,7 +196,7 @@ class OAuthClientTests: XCTestCase {
             return (nil, nil)
         }
 
-        client.requestToken(for: .password("email@email.com", "password")) { (result) in
+        client.requestToken(for: .password("email@email.com", "password", nil, nil)) { (result) in
             switch result {
             case .success(_):
                 XCTFail("Token was returned - expected failure")
@@ -224,7 +224,7 @@ class OAuthClientTests: XCTestCase {
             return (response, nil)
         }
 
-        client.requestToken(for: .password("email@email.com", "password")) { (result) in
+        client.requestToken(for: .password("email@email.com", "password", nil, nil)) { (result) in
             switch result {
             case .success(_):
                 XCTFail("Token was returned - expected failure")
@@ -254,7 +254,7 @@ class OAuthClientTests: XCTestCase {
             return (response, mockToken)
         }
 
-        client.requestToken(for: .password("test@test.com", "password")) { (result) in
+        client.requestToken(for: .password("test@test.com", "password", nil, nil)) { (result) in
             switch result {
             case .success(_):
                 XCTAssertNotNil(self.keychain.keychainItems["password"])
@@ -286,7 +286,7 @@ class OAuthClientTests: XCTestCase {
                                         keychain: failingKeychain,
                                         connectionBuilder: connectionBuilder)
 
-        failureClient.requestToken(for: OAuthGrantType.password("test@test.com", "password")) { (result) in
+        failureClient.requestToken(for: OAuthGrantType.password("test@test.com", "password", nil, nil)) { (result) in
             switch result {
             case .success(_):
                 XCTFail("Success was returned")
@@ -315,7 +315,7 @@ class OAuthClientTests: XCTestCase {
             return (response, mockToken)
         }
 
-        client.requestToken(for: .password("test@test.com", "password")) { (result) in
+        client.requestToken(for: .password("test@test.com", "password", nil, nil)) { (result) in
             switch result {
             case .success(_):
                 XCTFail("Success was returned - expecting failure")
@@ -334,7 +334,7 @@ class OAuthClientTests: XCTestCase {
             throw OAuthClientError.genericWithMessage("Request Error")
         }
 
-        client.requestToken(for: .password("test@test.com", "password")) { (result) in
+        client.requestToken(for: .password("test@test.com", "password", nil, nil)) { (result) in
             switch result {
             case .success(_):
                 XCTFail("Success was returned - expecting failure")
@@ -355,7 +355,7 @@ class OAuthClientTests: XCTestCase {
 
         try keychain.add(tokenToStore, withKey: "password")
 
-        client.fetchStoredToken(type: .password("", "")) { (result) in
+        client.fetchStoredToken(type: .password("", "", nil, nil)) { (result) in
             switch result {
             case .success(let token):
                 XCTAssertEqual(tokenToStore.accessToken, token.accessToken)
@@ -384,7 +384,7 @@ class OAuthClientTests: XCTestCase {
             return (response, mockRefreshedToken)
         }
 
-        client.fetchStoredToken(type: .password("", "")) { (result) in
+        client.fetchStoredToken(type: .password("", "", nil, nil)) { (result) in
             switch result {
             case .success(_):
                 XCTFail("expecting failure - got success")
@@ -413,7 +413,7 @@ class OAuthClientTests: XCTestCase {
             return (response, mockRefreshedToken)
         }
 
-        client.fetchStoredToken(type: .password("", "")) { (result) in
+        client.fetchStoredToken(type: .password("", "", nil, nil)) { (result) in
             switch result {
             case .success(_):
                 expect.fulfill()
@@ -436,7 +436,7 @@ class OAuthClientTests: XCTestCase {
             return (response, mockRefreshedToken)
         }
 
-        client.fetchStoredToken(type: .password("", "")) { (result) in
+        client.fetchStoredToken(type: .password("", "", nil, nil)) { (result) in
             switch result {
             case .success(_):
                 XCTFail("expecting failure - got success")
@@ -458,7 +458,7 @@ class OAuthClientTests: XCTestCase {
         try keychain.add(tokenToStore, withKey: "password")
 
         // Verify the token is infact stored
-        client.fetchStoredToken(type: .password("", "")) { [weak self] result in
+        client.fetchStoredToken(type: .password("", "", nil, nil)) { [weak self] result in
             guard let self = self else {
                 XCTFail()
                 return
@@ -471,7 +471,7 @@ class OAuthClientTests: XCTestCase {
                 self.client.logout()
 
                 // Verify we can no longer fetch a stored password token
-                self.client.fetchStoredToken(type: .password("", "")) { secondResult in
+                self.client.fetchStoredToken(type: .password("", "", nil, nil)) { secondResult in
                     switch secondResult {
                     case .success(_):
                         XCTFail("Token was still retreived")
