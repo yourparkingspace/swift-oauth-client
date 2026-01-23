@@ -64,6 +64,7 @@ public class OAuthClient: Client {
         
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setHTTPAuthorization(.basicAuthentication(username: serverConnection.clientID, password: serverConnection.clientSecret))
         request.setHTTPBody(parameters: buildParamsForRequest(grant: grantType, extras: params))
         
