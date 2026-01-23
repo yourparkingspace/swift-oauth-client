@@ -42,16 +42,32 @@ public class OAuthClient: Client {
             clearTokens()
         }
     }
-
+    
     public func requestToken(for grantType: OAuthGrantType, completion: @escaping (Result<OAuthAccessToken, Error>) -> Void) {
+        if let paramBuilder = serverConnection.paramBuilder {
+            paramBuilder({ [weak self] result in
+                switch result {
+                case .success(let params):
+                    self?.doRequest(for: grantType, params: params, completion: completion)
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            })
+            
+        } else {
+            doRequest(for: grantType, params: nil, completion: completion)
+        }
+    }
+    
+    private func doRequest(for grantType: OAuthGrantType, params: [String: String]?, completion: @escaping (Result<OAuthAccessToken, Error>) -> Void) {
         var request = URLRequest(url: serverConnection.serverURL)
+        
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setHTTPAuthorization(.basicAuthentication(username: serverConnection.clientID, password: serverConnection.clientSecret))
-        request.setHTTPBody(parameters: buildParamsForRequest(grant: grantType))
-
-
+        request.setHTTPBody(parameters: buildParamsForRequest(grant: grantType, extras: params))
+        
         session.dataTask(with: request) { [weak self] (data, response, error) in
             guard let self = self else { return }
             guard error == nil else {
@@ -63,7 +79,7 @@ public class OAuthClient: Client {
                 }
                 return
             }
-
+            
             guard let response = response as? HTTPURLResponse else {
                 DispatchQueue.main.async {
                     if case .refresh = grantType {
@@ -73,7 +89,7 @@ public class OAuthClient: Client {
                 }
                 return
             }
-
+            
             if response.statusCode != 200 {
                 DispatchQueue.main.async {
                     if case .refresh = grantType {
@@ -103,7 +119,7 @@ public class OAuthClient: Client {
                 }
                 return
             }
-
+            
             guard let data = data, data.isEmpty == false else {
                 DispatchQueue.main.async {
                     if case .refresh = grantType {
@@ -115,12 +131,12 @@ public class OAuthClient: Client {
             }
             
             let decoder = JSONDecoder()
-
+            
             do {
                 let token = try decoder.decode(OAuthAccessToken.self, from: data)
                 DispatchQueue.main.async {
                     let success = self.keychainHelper.update(token, withKey: grantType.storageKey)
-
+                    
                     if success {
                         completion(.success(token))
                     } else {
@@ -134,6 +150,7 @@ public class OAuthClient: Client {
             }
         }.resume()
     }
+    
 
     public func authenticateRequest(_ request: URLRequest, successBlock: @escaping (URLRequest) -> Void, errorBlock: @escaping (Error?) -> Void) {
 
@@ -205,10 +222,16 @@ public class OAuthClient: Client {
         let _ = keychainHelper.remove(withKey: OAuthGrantType.clientCredentials.storageKey)
     }
 
-    private func buildParamsForRequest(grant: OAuthGrantType) -> [String: String] {
+    private func buildParamsForRequest(grant: OAuthGrantType, extras: [String: String]?) -> [String: String] {
         var params = grant.params
         params["client_id"] = serverConnection.clientID
         params["client_secret"] = serverConnection.clientSecret
+        
+        if let extraParams = extras {
+            for (key, value) in extraParams {
+                params[key] = value
+            }
+        }
 
         return params
     }

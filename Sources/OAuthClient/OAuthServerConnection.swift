@@ -11,10 +11,14 @@ public struct OAuthServerConnection {
     public let serverURL: URL
     public let clientID: String
     public let clientSecret: String
+    public let paramBuilder: OAuthParamBuilder?
 
-    public init(url: URL, clientID: String, clientSecret: String) {
+    public init(url: URL, clientID: String, clientSecret: String, paramBuilder: OAuthParamBuilder? = nil) {
         self.serverURL = url
         self.clientID = clientID
         self.clientSecret = clientSecret
+        self.paramBuilder = paramBuilder
     }
 }
+
+public typealias OAuthParamBuilder = ( _ completion: @escaping (Result<[String: String], Error>) -> Void) -> Void
